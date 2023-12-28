@@ -54,7 +54,7 @@ class DryrunScript():
                 else:
                     f.write(line + "\n")
 
-def VScode_export_bashscript(input_file, output_file="configurations.json"):
+def VScode_export_bashscript(input_file, output_file="config.json"):
     # Create and run dryrun file
     dryrun = DryrunScript(input_file)
     dryrun.create_dryrun_script()
@@ -97,6 +97,6 @@ def VScode_export_bashscript(input_file, output_file="configurations.json"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file', type=str, default="unify.sh")
-    parser.add_argument('--output_file', type=str, default="configurations.json")
+    parser.add_argument('--output_file', type=str, default="config.json")
     args = parser.parse_args() 
     VScode_export_bashscript(args.input_file, args.output_file)
