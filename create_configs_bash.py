@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import argparse
 
 class DryrunScript():
     def __init__(self, file_name) -> None:
@@ -30,7 +31,6 @@ class DryrunScript():
                 line_temp += line
                 self.command_merged.append(line_temp)
                 line_temp = ""
-        print("test")
 
         self.dryrun_config = """dryrun() {
     if [[ ! -t 0 ]]
@@ -55,7 +55,7 @@ class DryrunScript():
                     f.write(line + "\n")
 
 def VScode_export_bashscript(input_file, output_file="configurations.json"):
-    # 
+    # Create and run dryrun file
     dryrun = DryrunScript(input_file)
     dryrun.create_dryrun_script()
 
@@ -63,29 +63,40 @@ def VScode_export_bashscript(input_file, output_file="configurations.json"):
 
     result = result.decode().splitlines()
 
+    # Remove dryrun file
+    os.remove(f"{dryrun.dryrun_file}") 
+
+    # Process output from dryrun
+    python_command_list = []
+
     for line in result:
+        # Detect python
         if "python " in line:
-            command = line
+            python_command_list.append(line)
 
-    command = command.replace("\"", "")
-    command = command.replace("\'", "")
-    all_elements = command.split()
+    configurations_dict = {}
 
-    args = all_elements[all_elements.index("python")+2:]
-    program = all_elements[all_elements.index("python")+1]
+    for i, _ in enumerate(python_command_list):
+        python_command_list[i] = python_command_list[i].replace("\"", "").replace("\'", "")
+        all_elements = python_command_list[i].split()
 
-    env_variables = all_elements[:all_elements.index("python")]
-    variable_dict = {}
-    for variable in env_variables:
-        name, value = variable.split("=")
-        variable_dict[name] = value
+        configurations_dict[f"script_{i}"] = {}
+        configurations_dict[f"script_{i}"]["program"] = all_elements[all_elements.index("python")+1]
+        configurations_dict[f"script_{i}"]["args"] = all_elements[all_elements.index("python")+2:]
 
-    configurations_dict = {"program": program, "args": args, 
-                        "env": variable_dict}
+        env_variables = all_elements[:all_elements.index("python")]
+        configurations_dict[f"script_{i}"]["env"] = {}
+
+        for variable in env_variables:
+            name, value = variable.split("=")
+            configurations_dict[f"script_{i}"]["env"][name] = value
+
     with open(output_file, "w") as file:
-        json.dump(configurations_dict, file)
+        json.dump(configurations_dict, file, sort_keys=False, indent=4)
 
 if __name__ == "__main__":
-    input_file = "unify.sh"
-    output_file = "configurations.json"
-    VScode_export_bashscript(input_file, output_file)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_file', type=str, default="unify.sh")
+    parser.add_argument('--output_file', type=str, default="configurations.json")
+    args = parser.parse_args() 
+    VScode_export_bashscript(args.input_file, args.output_file)
