@@ -1,6 +1,7 @@
 # VSCode parser
 This simple repo is to extract program name, arguments, environment variables from python command inside bash script into .json file for usage with VS code.
 # Bash script usage
+Replace unify.sh with your bash script
 ```
 python create_configs_bash.py --input_file unify.sh --output_file configs.json
 ```
