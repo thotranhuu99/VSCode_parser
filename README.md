@@ -12,4 +12,4 @@ python create_configs.py --command "$python_command" --output_file configs.json
 # Note
 Loop is not tested, if-else is not support.
 # Todo
-Support for python module, environment variables in multiple lines from bash script.
+Support for python module.
