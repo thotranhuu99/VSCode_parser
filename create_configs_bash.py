@@ -13,10 +13,24 @@ class DryrunScript():
         self.decorator = []
         self.command = []
         for line in self.file_lines:
-            if line[0] == "#":
-                self.decorator.append(line)
+            if len(line) > 0:
+                if line[0] == "#":
+                    self.decorator.append(line)
+                else:
+                    self.command.append(line)
+        self.command_merged = []
+        line_temp = ""
+        for i, line in enumerate(self.command):
+            if line[-1] == "\\":
+                line_temp += line[:-1].strip() + " "
+                # In case last line also has "\\"
+                if i == len(self.command) - 1:
+                    self.command_merged.append(line_temp)
             else:
-                self.command.append(line)
+                line_temp += line
+                self.command_merged.append(line_temp)
+                line_temp = ""
+        print("test")
 
         self.dryrun_config = """dryrun() {
     if [[ ! -t 0 ]]
@@ -34,9 +48,11 @@ class DryrunScript():
 
             f.write(self.dryrun_config + "\n")
 
-            for line in self.command:
-                f.write("dryrun " + line + "\n")
-        print("test")
+            for line in self.command_merged:
+                if "python " in line: 
+                    f.write("dryrun " + line + "\n")
+                else:
+                    f.write(line + "\n")
 
 def VScode_export_bashscript(input_file, output_file="configurations.json"):
     # 
@@ -70,6 +86,6 @@ def VScode_export_bashscript(input_file, output_file="configurations.json"):
         json.dump(configurations_dict, file)
 
 if __name__ == "__main__":
-    input_file = "demo.sh"
+    input_file = "unify.sh"
     output_file = "configurations.json"
     VScode_export_bashscript(input_file, output_file)
