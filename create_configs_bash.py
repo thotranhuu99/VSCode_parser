@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import argparse
+import copy
 
 class DryrunScript():
     def __init__(self, file_name) -> None:
@@ -51,6 +52,8 @@ class DryrunScript():
             for line in self.command_merged:
                 if "python " in line: 
                     f.write("dryrun " + line + "\n")
+                elif line.startswith("export"):
+                    f.write("dryrun " + line + "\n")
                 else:
                     f.write(line + "\n")
 
@@ -67,25 +70,37 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
     os.remove(f"{dryrun.dryrun_file}") 
 
     # Process output from dryrun
+    # python_command_counter = 0
+    env_list = []
+    env_buffer = {}
     python_command_list = []
 
     for line in result:
         # Detect python
         if "python " in line:
             python_command_list.append(line)
+            env_list.append(copy.deepcopy(env_buffer))
+            # python_command_counter += 1
+        # Dectect environment variable
+        elif line.startswith("export"):
+            name, value = line.split()[-1].split("=")
+            env_buffer[name] = value
 
+    
     configurations_dict = {}
 
     for i, _ in enumerate(python_command_list):
+
         python_command_list[i] = python_command_list[i].replace("\"", "").replace("\'", "")
         all_elements = python_command_list[i].split()
 
         configurations_dict[f"script_{i}"] = {}
         configurations_dict[f"script_{i}"]["program"] = all_elements[all_elements.index("python")+1]
         configurations_dict[f"script_{i}"]["args"] = all_elements[all_elements.index("python")+2:]
+        configurations_dict[f"script_{i}"]["env"] = env_list[i]
 
         env_variables = all_elements[:all_elements.index("python")]
-        configurations_dict[f"script_{i}"]["env"] = {}
+        # configurations_dict[f"script_{i}"]["env"] = {}
 
         for variable in env_variables:
             name, value = variable.split("=")
