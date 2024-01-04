@@ -71,7 +71,6 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
     os.remove(f"{dryrun.dryrun_file}") 
 
     # Process output from dryrun
-    # python_command_counter = 0
     env_list = []
     env_buffer = {}
     python_command_list = []
@@ -81,19 +80,15 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
         if "python " in line:
             python_command_list.append(line)
             env_list.append(copy.deepcopy(env_buffer))
-            # python_command_counter += 1
         # Dectect environment variable
         elif line.startswith("export"):
             name, value = line.split()[-1].split("=")
             env_buffer[name] = value
 
-    
     configurations_dict = {}
-    parser = argparse.ArgumentParser(prog='PROG')
 
     for i, _ in enumerate(python_command_list):
 
-        # python_command_list[i] = python_command_list[i].replace("\"", "").replace("\'", "")
         python_command_separated = python_command_list[i].split()
         python_index = python_command_separated.index("python")
 
@@ -102,10 +97,9 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
         with open('vsargs.json') as file:
             args = json.load(file)
         os.remove('vsargs.json')
-        # all_elements = python_command_list[i].split()
 
         configurations_dict[f"script_{i}"] = {}
-        configurations_dict[f"script_{i}"]["program"] = python_command_separated[python_command_separated.index("python")+1]
+        configurations_dict[f"script_{i}"]["program"] = python_command_separated[python_index+1]
         configurations_dict[f"script_{i}"]["args"] = args
         configurations_dict[f"script_{i}"]["env"] = env_list[i]
 
@@ -122,7 +116,6 @@ def write_args_to_json(args_str):
     full_path = os.path.realpath(__file__)
     print(full_path)
     python_command = f"{full_path} {args_str} --mode_vsparser export_arg"
-    # subprocess.Popen(["python", python_command])
     os.system(f"python {python_command}")
 
 if __name__ == "__main__":
@@ -135,6 +128,5 @@ if __name__ == "__main__":
         args, unkown_args = parser.parse_known_args()
         VScode_export_bashscript(args.input, args.output)
     if args.mode_vsparser == "export_arg":
-        # print("wtf you are in")
         with open("vsargs.json", "w") as file:
             json.dump(unkown_args, file, sort_keys=False, indent=4)
