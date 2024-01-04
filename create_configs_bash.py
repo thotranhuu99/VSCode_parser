@@ -3,6 +3,7 @@ import os
 import subprocess
 import argparse
 import copy
+import sys
 
 class DryrunScript():
     def __init__(self, file_name) -> None:
@@ -88,18 +89,26 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
 
     
     configurations_dict = {}
+    parser = argparse.ArgumentParser(prog='PROG')
 
     for i, _ in enumerate(python_command_list):
 
         python_command_list[i] = python_command_list[i].replace("\"", "").replace("\'", "")
-        all_elements = python_command_list[i].split()
+        python_command_separated = python_command_list[i].split()
+        python_index = python_command_separated.index("python")
+
+        python_args_joined = " ".join(python_command_separated[python_index+2:])
+        write_args_to_json(python_args_joined)
+        with open('vsargs.json') as file:
+            args = json.load(file)
+        # all_elements = python_command_list[i].split()
 
         configurations_dict[f"script_{i}"] = {}
-        configurations_dict[f"script_{i}"]["program"] = all_elements[all_elements.index("python")+1]
-        configurations_dict[f"script_{i}"]["args"] = all_elements[all_elements.index("python")+2:]
+        configurations_dict[f"script_{i}"]["program"] = python_command_separated[python_command_separated.index("python")+1]
+        configurations_dict[f"script_{i}"]["args"] = args
         configurations_dict[f"script_{i}"]["env"] = env_list[i]
 
-        env_variables = all_elements[:all_elements.index("python")]
+        env_variables = python_command_separated[:python_index]
         # configurations_dict[f"script_{i}"]["env"] = {}
 
         for variable in env_variables:
@@ -109,9 +118,23 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
     with open(output_file, "w") as file:
         json.dump(configurations_dict, file, sort_keys=False, indent=4)
 
+def write_args_to_json(args_str):
+    full_path = os.path.realpath(__file__)
+    print(full_path)
+    python_command = f"{full_path} {args_str} --mode_vsparser export_arg"
+    # subprocess.Popen(["python", python_command])
+    os.system(f"python {python_command}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_file', type=str, default="unify.sh")
-    parser.add_argument('--output_file', type=str, default="config.json")
-    args = parser.parse_args() 
-    VScode_export_bashscript(args.input_file, args.output_file)
+    parser.add_argument('--mode_vsparser', type=str, default="run")
+    args, unkown_args = parser.parse_known_args()
+    if args.mode_vsparser == "run":
+        parser.add_argument('--input', type=str, default="quan.sh")
+        parser.add_argument('--output', type=str, default="config.json")
+        args, unkown_args = parser.parse_known_args()
+        VScode_export_bashscript(args.input, args.output)
+    if args.mode_vsparser == "export_arg":
+        # print("wtf you are in")
+        with open("vsargs.json", "w") as file:
+            json.dump(unkown_args, file, sort_keys=False, indent=4)
