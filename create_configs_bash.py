@@ -93,7 +93,7 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
 
     for i, _ in enumerate(python_command_list):
 
-        python_command_list[i] = python_command_list[i].replace("\"", "").replace("\'", "")
+        # python_command_list[i] = python_command_list[i].replace("\"", "").replace("\'", "")
         python_command_separated = python_command_list[i].split()
         python_index = python_command_separated.index("python")
 
@@ -101,6 +101,7 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
         write_args_to_json(python_args_joined)
         with open('vsargs.json') as file:
             args = json.load(file)
+        os.remove('vsargs.json')
         # all_elements = python_command_list[i].split()
 
         configurations_dict[f"script_{i}"] = {}
@@ -109,7 +110,6 @@ def VScode_export_bashscript(input_file, output_file="config.json"):
         configurations_dict[f"script_{i}"]["env"] = env_list[i]
 
         env_variables = python_command_separated[:python_index]
-        # configurations_dict[f"script_{i}"]["env"] = {}
 
         for variable in env_variables:
             name, value = variable.split("=")
