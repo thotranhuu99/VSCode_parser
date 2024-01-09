@@ -5,7 +5,7 @@ criterion=diffusion_dag_loss
 checkpoint_dir=/cm/archive/quannt40/Diffu-DAT/checkpoints_4/$data_name"_"$arch"_"$criterion
  
  
-CUDA_VISIBLE_DEVICES=0 python fairseq-train.py ${data_dir}  \
+CUDA_VISIBLE_DEVICES=0 python3 fairseq-train.py ${data_dir}  \
     --user-dir fs_plugins \
     --task translation_lev_modified  --noise full_mask \
     --arch ${arch} \
